@@ -4,6 +4,7 @@
 #include <chrono>
 #include <opencv2/opencv.hpp>
 
+
 class Pixel
 {
   public:
@@ -31,7 +32,7 @@ class KMeans
     {
         this->image = image;
         this->K = K;
-        labels = cv::Mat::zeros(cv::Size(image.rows, image.cols), CV_8UC1);
+        labels = cv::Mat::zeros(cv::Size(image.cols, image.rows), CV_8UC1);
         for (int i = 0; i < K; i++)
         {
             int randRow = random(image.rows - 1);
@@ -67,16 +68,11 @@ class KMeans
                 image.at<cv::Vec3b>(r, c) = bgr_pixel;
             }
         }
-        std::cout << "showing..." << std::endl;
-        cv::imshow("CompressedImage", image);
-        cvWaitKey(0);
-        cvDestroyAllWindows();
     }
 
   private:
     void assignNewClusterCentres()
     {
-        std::cout << image.rows * image.cols << std::endl;
         for (int r = 0; r < image.rows; r++)
         {
             for (int c = 0; c < image.cols; c++)
@@ -133,7 +129,7 @@ class KMeans
 
     static double euclideanDistance(int x1, int y1, int c1, int x2, int y2, int c2)
     {
-        return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2) + pow(c1, c2));
+        return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2) + pow(c1- c2, 2));
     }
 
     static int random(int lim)
@@ -144,15 +140,33 @@ class KMeans
     }
 };
 
+
 int main(int argc, char **argv)
 {
-    cv::Mat imageOriginal;
-    imageOriginal = cv::imread("rain_princess.jpg");
-    if (imageOriginal.empty())
+    std::string imgFileName;
+    std::string outFileName;
+    int nColorVectors=64;
+    
+    if(argc<3){
+        std::cout<<"Please specify input and output filename(or path)\n";
+        return 1;
+    }
+    
+    if(argc==4)
+        nColorVectors = std::stoi(argv[3]);
+    
+    imgFileName = argv[1];
+    outFileName = argv[2];
+    cv::Mat image;
+    image = cv::imread(imgFileName);
+    
+    if (image.empty())
         return -1;
-    KMeans kmeans(imageOriginal, 6);
+    
+    KMeans kmeans(image, nColorVectors);
     kmeans.train(10);
     kmeans.convert();
+    cv::imwrite(outFileName, image);
 
     return 0;
 }
